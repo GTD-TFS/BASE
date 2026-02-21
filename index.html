@@ -111,7 +111,7 @@
     .main {
       min-height: 0;
       display: grid;
-      grid-template-columns: 1.08fr .92fr;
+      grid-template-columns: 1fr;
       gap: 14px;
     }
 
@@ -165,27 +165,6 @@
       margin: 6px 0 0;
       color: var(--muted);
       font-size: 12px;
-    }
-
-    .preview {
-      min-height: 0;
-      display: grid;
-      grid-template-rows: auto minmax(0,1fr);
-    }
-
-    .json {
-      min-height: 0;
-      margin: 0;
-      padding: 14px;
-      overflow: auto;
-      font-size: 12px;
-      line-height: 1.35;
-      color: #dff0ff;
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      background: rgba(0,0,0,.2);
-      border-radius: 0 0 22px 22px;
     }
 
     .foot {
@@ -282,17 +261,12 @@
       <article class="card panel">
         <div class="head">
           <strong>Tokens / documentos</strong>
-          <span id="count" class="sub">0</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span id="count" class="sub">0</span>
+            <button id="btnDownload" class="btn primary" type="button" disabled>Descargar</button>
+          </div>
         </div>
         <div id="list" class="list"></div>
-      </article>
-
-      <article class="card preview">
-        <div class="head">
-          <strong>Vista previa JSON</strong>
-          <button id="btnDownload" class="btn primary" type="button" disabled>Descargar</button>
-        </div>
-        <pre id="preview" class="json">Selecciona un token/documento para previsualizar y descargar.</pre>
       </article>
     </section>
 
@@ -345,7 +319,6 @@
       btnLogout: document.getElementById("btnLogout"),
       list: document.getElementById("list"),
       count: document.getElementById("count"),
-      preview: document.getElementById("preview"),
       btnDownload: document.getElementById("btnDownload"),
       status: document.getElementById("status"),
       selectedInfo: document.getElementById("selectedInfo")
@@ -403,36 +376,36 @@
       }
 
       for (const d of docs) {
-        const token = d.data?.token || d.id;
+        const label = (d.data?.label || "").toString().trim();
+        const token = (d.data?.tokenPublico || d.data?.token || d.id || "").toString().trim();
+        const principal = label || token || d.id;
         const item = document.createElement("button");
         item.type = "button";
         item.className = `item${selectedId === d.id ? " active" : ""}`;
         item.innerHTML = `
-          <p class="token">${token}</p>
-          <p class="meta">ID: ${d.id}<br>Fecha: ${safeDate(d.data?.createdAt)}${d.data?.source ? `<br>Origen: ${d.data.source}` : ""}</p>
+          <p class="token">${principal}</p>
+          <p class="meta">ID token: ${token || d.id}</p>
         `;
         item.addEventListener("click", () => {
           selectedId = d.id;
           renderList();
-          renderPreview();
+          updateSelectionUI();
         });
         el.list.appendChild(item);
       }
     }
 
-    function renderPreview() {
+    function updateSelectionUI() {
       const hit = docs.find(x => x.id === selectedId) || null;
       if (!hit) {
-        el.preview.textContent = "Selecciona un token/documento para previsualizar y descargar.";
         el.btnDownload.disabled = true;
         el.selectedInfo.textContent = "Sin selección";
         return;
       }
 
-      const obj = toPlain(hit.data || {});
-      el.preview.textContent = JSON.stringify(obj, null, 2);
       el.btnDownload.disabled = false;
-      el.selectedInfo.textContent = `Seleccionado: ${hit.data?.token || hit.id}`;
+      const label = (hit.data?.label || "").toString().trim();
+      el.selectedInfo.textContent = `Seleccionado: ${label || hit.data?.tokenPublico || hit.data?.token || hit.id}`;
     }
 
     function downloadSelected() {
@@ -440,8 +413,8 @@
       if (!hit) return;
       const obj = toPlain(hit.data || {});
       const text = JSON.stringify(obj, null, 2);
-      const token = (hit.data?.token || hit.id || "inbox").toString().trim();
-      const name = `${token.replace(/[\\/:*?"<>|\s]+/g, "_")}.json`;
+      const baseName = (hit.data?.label || hit.data?.tokenPublico || hit.data?.token || hit.id || "inbox").toString().trim();
+      const name = `${baseName.replace(/[\\/:*?"<>|\s]+/g, "_")}.json`;
 
       const blob = new Blob([text], { type: "application/json;charset=utf-8" });
       const url = URL.createObjectURL(blob);
@@ -476,7 +449,7 @@
         if (selectedId && !docs.some(d => d.id === selectedId)) selectedId = docs[0]?.id || null;
 
         renderList();
-        renderPreview();
+        updateSelectionUI();
         setStatus(`Conectado · ${docs.length} documento(s).`, "ok");
       }, (err) => {
         setStatus(`Error leyendo denupolInbox: ${err?.message || err}`, "err");
@@ -523,7 +496,7 @@
       docs = [];
       selectedId = null;
       renderList();
-      renderPreview();
+      updateSelectionUI();
       showLogin("Inicia sesión para continuar.");
       setStatus("Sin sesión.");
     });
