@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BASE · Inbox Browser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Sora:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #05070d;
+      --bg-1: #0b1324;
+      --bg-2: #10203a;
+      --glass: rgba(255,255,255,.08);
+      --glass-strong: rgba(255,255,255,.12);
+      --line: rgba(255,255,255,.18);
+      --txt: #ecf3ff;
+      --muted: #a3b3cf;
+      --accent: #4fd1ff;
+      --accent-2: #7cffc5;
+      --danger: #ff6b7a;
+      --ok: #66f0b2;
+      --shadow: 0 18px 50px rgba(0, 0, 0, .45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--txt);
+      font-family: "Space Grotesk", "Sora", system-ui, sans-serif;
+      min-height: 100dvh;
+      background:
+        radial-gradient(900px 400px at 8% -10%, rgba(79, 209, 255, .26), transparent 60%),
+        radial-gradient(1200px 500px at 100% 10%, rgba(124, 255, 197, .16), transparent 62%),
+        linear-gradient(155deg, var(--bg-0), var(--bg-1) 52%, var(--bg-2));
+      overflow: hidden;
+    }
+
+    .shell {
+      width: min(1120px, 100% - 28px);
+      margin: 16px auto;
+      height: calc(100dvh - 32px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(160deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      backdrop-filter: blur(14px) saturate(130%);
+      -webkit-backdrop-filter: blur(14px) saturate(130%);
+      box-shadow: var(--shadow);
+      border-radius: 22px;
+    }
+
+    .top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 16px;
+      align-items: center;
+    }
+
+    .title {
+      margin: 0;
+      font-family: "Sora", "Space Grotesk", sans-serif;
+      font-size: clamp(20px, 3vw, 30px);
+      letter-spacing: .2px;
+    }
+
+    .sub {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 11px 14px;
+      color: var(--txt);
+      background: rgba(255,255,255,.08);
+      font: inherit;
+      cursor: pointer;
+      transition: .18s ease;
+      font-weight: 700;
+    }
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.35);
+      background: rgba(255,255,255,.16);
+    }
+    .btn:disabled {
+      opacity: .42;
+      cursor: not-allowed;
+    }
+    .btn.primary {
+      color: #031220;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    }
+    .btn.danger {
+      color: #fff;
+      background: rgba(255, 107, 122, .2);
+      border-color: rgba(255, 107, 122, .45);
+    }
+
+    .main {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1.08fr .92fr;
+      gap: 14px;
+    }
+
+    .panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0,1fr);
+    }
+
+    .head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .list {
+      min-height: 0;
+      overflow: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,.04);
+      cursor: pointer;
+      transition: .16s ease;
+    }
+    .item:hover { background: rgba(255,255,255,.10); }
+    .item.active {
+      border-color: rgba(79, 209, 255, .9);
+      background: linear-gradient(140deg, rgba(79, 209, 255, .24), rgba(124, 255, 197, .16));
+    }
+
+    .token {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      word-break: break-all;
+    }
+
+    .meta {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .preview {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0,1fr);
+    }
+
+    .json {
+      min-height: 0;
+      margin: 0;
+      padding: 14px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.35;
+      color: #dff0ff;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: rgba(0,0,0,.2);
+      border-radius: 0 0 22px 22px;
+    }
+
+    .foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+      min-height: 18px;
+    }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--danger); }
+
+    #loginGate {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(0, 0, 0, .65);
+      z-index: 99;
+      padding: 14px;
+    }
+    #loginGate[hidden] { display: none !important; }
+
+    .loginCard {
+      width: min(460px, 100%);
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+      box-shadow: var(--shadow);
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 6px;
+      font-size: 13px;
+      color: #d8e7ff;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      font: inherit;
+      color: var(--txt);
+      background: rgba(255,255,255,.08);
+    }
+
+    @media (pointer: coarse) {
+      input, select, textarea { font-size: 16px; }
+    }
+
+    @media (max-width: 920px) {
+      .shell { height: auto; min-height: calc(100dvh - 24px); }
+      .main { grid-template-columns: 1fr; }
+      body { overflow: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div id="loginGate">
+    <div class="loginCard card">
+      <h2 class="title" style="font-size:24px;margin:0">BASE · Acceso</h2>
+      <p class="sub">Inicia sesión para leer `denupolInbox`.</p>
+      <form id="loginForm" autocomplete="on">
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" name="email" type="email" autocomplete="username email" required>
+        <label for="loginPass">Contraseña</label>
+        <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
+        <button class="btn primary" id="btnLogin" type="submit" style="margin-top:14px;width:100%">Entrar</button>
+      </form>
+      <p id="loginStatus" class="status" style="margin:10px 0 0"></p>
+    </div>
+  </div>
+
+  <div class="shell">
+    <section class="card top">
+      <div>
+        <h1 class="title">BASE</h1>
+        <p class="sub">Repositorio visual para documentos de <code>denupolInbox</code></p>
+      </div>
+      <button id="btnLogout" class="btn danger" type="button">Cerrar sesión</button>
+    </section>
+
+    <section class="main">
+      <article class="card panel">
+        <div class="head">
+          <strong>Tokens / documentos</strong>
+          <span id="count" class="sub">0</span>
+        </div>
+        <div id="list" class="list"></div>
+      </article>
+
+      <article class="card preview">
+        <div class="head">
+          <strong>Vista previa JSON</strong>
+          <button id="btnDownload" class="btn primary" type="button" disabled>Descargar</button>
+        </div>
+        <pre id="preview" class="json">Selecciona un token/documento para previsualizar y descargar.</pre>
+      </article>
+    </section>
+
+    <section class="card foot">
+      <div id="status" class="status">Esperando autenticación…</div>
+      <div class="sub" id="selectedInfo">Sin selección</div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      setPersistence,
+      browserLocalPersistence,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      orderBy,
+      limit,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDUG_T31JEWDK9x_apUZVHwriWnjurNrms",
+      authDomain: "denupol.firebaseapp.com",
+      projectId: "denupol",
+      storageBucket: "denupol.firebasestorage.app",
+      messagingSenderId: "691472437659",
+      appId: "1:691472437659:web:2cdd59082976841d7d513e"
+    };
+
+    const APP_NAME = "base-denupol";
+    const app = getApps().some(a => a.name === APP_NAME) ? getApp(APP_NAME) : initializeApp(firebaseConfig, APP_NAME);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const el = {
+      loginGate: document.getElementById("loginGate"),
+      loginForm: document.getElementById("loginForm"),
+      loginEmail: document.getElementById("loginEmail"),
+      loginPass: document.getElementById("loginPass"),
+      loginStatus: document.getElementById("loginStatus"),
+      btnLogin: document.getElementById("btnLogin"),
+      btnLogout: document.getElementById("btnLogout"),
+      list: document.getElementById("list"),
+      count: document.getElementById("count"),
+      preview: document.getElementById("preview"),
+      btnDownload: document.getElementById("btnDownload"),
+      status: document.getElementById("status"),
+      selectedInfo: document.getElementById("selectedInfo")
+    };
+
+    let docs = [];
+    let selectedId = null;
+    let unsubInbox = null;
+
+    function setStatus(msg, kind = "") {
+      el.status.className = `status ${kind}`.trim();
+      el.status.textContent = msg || "";
+    }
+
+    function showLogin(msg = "") {
+      el.loginGate.hidden = false;
+      el.loginStatus.textContent = msg;
+      try { el.loginEmail.focus(); } catch {}
+    }
+
+    function hideLogin() {
+      el.loginGate.hidden = true;
+      el.loginStatus.textContent = "";
+      el.loginPass.value = "";
+    }
+
+    function toPlain(value) {
+      if (value == null) return value;
+      if (Array.isArray(value)) return value.map(toPlain);
+      if (typeof value === "object") {
+        if (typeof value.toDate === "function") {
+          try { return value.toDate().toISOString(); } catch { return String(value); }
+        }
+        const out = {};
+        for (const [k, v] of Object.entries(value)) out[k] = toPlain(v);
+        return out;
+      }
+      return value;
+    }
+
+    function safeDate(raw) {
+      if (!raw) return "s/f";
+      if (typeof raw?.toDate === "function") {
+        try { return raw.toDate().toLocaleString(); } catch {}
+      }
+      if (raw instanceof Date) return raw.toLocaleString();
+      return String(raw);
+    }
+
+    function renderList() {
+      el.list.innerHTML = "";
+      el.count.textContent = String(docs.length);
+      if (!docs.length) {
+        el.list.innerHTML = `<div class="item"><p class="token">Sin documentos</p><p class="meta">No hay registros en denupolInbox.</p></div>`;
+      }
+
+      for (const d of docs) {
+        const token = d.data?.token || d.id;
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = `item${selectedId === d.id ? " active" : ""}`;
+        item.innerHTML = `
+          <p class="token">${token}</p>
+          <p class="meta">ID: ${d.id}<br>Fecha: ${safeDate(d.data?.createdAt)}${d.data?.source ? `<br>Origen: ${d.data.source}` : ""}</p>
+        `;
+        item.addEventListener("click", () => {
+          selectedId = d.id;
+          renderList();
+          renderPreview();
+        });
+        el.list.appendChild(item);
+      }
+    }
+
+    function renderPreview() {
+      const hit = docs.find(x => x.id === selectedId) || null;
+      if (!hit) {
+        el.preview.textContent = "Selecciona un token/documento para previsualizar y descargar.";
+        el.btnDownload.disabled = true;
+        el.selectedInfo.textContent = "Sin selección";
+        return;
+      }
+
+      const obj = toPlain(hit.data || {});
+      el.preview.textContent = JSON.stringify(obj, null, 2);
+      el.btnDownload.disabled = false;
+      el.selectedInfo.textContent = `Seleccionado: ${hit.data?.token || hit.id}`;
+    }
+
+    function downloadSelected() {
+      const hit = docs.find(x => x.id === selectedId) || null;
+      if (!hit) return;
+      const obj = toPlain(hit.data || {});
+      const text = JSON.stringify(obj, null, 2);
+      const token = (hit.data?.token || hit.id || "inbox").toString().trim();
+      const name = `${token.replace(/[\\/:*?"<>|\s]+/g, "_")}.json`;
+
+      const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1200);
+      setStatus("Descarga iniciada.", "ok");
+    }
+
+    function startInboxListener() {
+      if (unsubInbox) {
+        try { unsubInbox(); } catch {}
+        unsubInbox = null;
+      }
+
+      const q = query(
+        collection(db, "denupolInbox"),
+        orderBy("createdAt", "desc"),
+        limit(300)
+      );
+
+      unsubInbox = onSnapshot(q, (snap) => {
+        const out = [];
+        snap.forEach(docSnap => out.push({ id: docSnap.id, data: docSnap.data() || {} }));
+        docs = out;
+
+        if (!selectedId && docs.length) selectedId = docs[0].id;
+        if (selectedId && !docs.some(d => d.id === selectedId)) selectedId = docs[0]?.id || null;
+
+        renderList();
+        renderPreview();
+        setStatus(`Conectado · ${docs.length} documento(s).`, "ok");
+      }, (err) => {
+        setStatus(`Error leyendo denupolInbox: ${err?.message || err}`, "err");
+      });
+    }
+
+    el.loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = (el.loginEmail.value || "").trim();
+      const pass = el.loginPass.value || "";
+      if (!email || !pass) return;
+
+      el.btnLogin.disabled = true;
+      el.loginStatus.textContent = "Entrando…";
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (err) {
+        el.loginStatus.textContent = `Error: ${err?.message || err}`;
+      } finally {
+        el.btnLogin.disabled = false;
+      }
+    });
+
+    el.btnLogout.addEventListener("click", async () => {
+      try { await signOut(auth); } catch {}
+    });
+
+    el.btnDownload.addEventListener("click", downloadSelected);
+
+    try { await setPersistence(auth, browserLocalPersistence); } catch {}
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        hideLogin();
+        setStatus("Sesión activa. Cargando denupolInbox…");
+        startInboxListener();
+        return;
+      }
+
+      if (unsubInbox) {
+        try { unsubInbox(); } catch {}
+        unsubInbox = null;
+      }
+      docs = [];
+      selectedId = null;
+      renderList();
+      renderPreview();
+      showLogin("Inicia sesión para continuar.");
+      setStatus("Sin sesión.");
+    });
+  </script>
+</body>
+</html>
